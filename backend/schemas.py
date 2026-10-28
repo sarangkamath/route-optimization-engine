@@ -8,5 +8,5 @@ class Location(BaseModel):
 
 class RouteRequest(BaseModel):
     warehouse : Location
-    deliveries : list[Location] = Field(min_length=1, max_length=10)
+    deliveries : list[Location] = Field(min_length=2, max_length=10)
 
