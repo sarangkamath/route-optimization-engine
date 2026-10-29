@@ -5,6 +5,7 @@ import httpx
 
 import os
 from dotenv import load_dotenv
+load_dotenv()
 
 
 async def get_travel_time_matrix(locations: list[Location]) -> list[list[int]]:
@@ -13,7 +14,7 @@ async def get_travel_time_matrix(locations: list[Location]) -> list[list[int]]:
         f"{loc.longitude},{loc.latitude}" for loc in locations
     )
 
-    url = f"{os.getenv('OSRM_BASE_URL')}/table/v1/driving/{coordinates}"
+    url = f"{os.getenv("OSRM_BASE_URL")}/table/v1/driving/{coordinates}"
 
     try:
         async with httpx.AsyncClient(timeout=15) as client:
