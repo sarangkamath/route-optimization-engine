@@ -62,3 +62,12 @@ def test_osrm_failures_become_http_errors(monkeypatch, data, error, expected_sta
         asyncio.run(osrm_client.get_travel_time_matrix(LOCATIONS))
 
     assert exc.value.status_code == expected_status
+
+
+def test_route_geometry_is_returned_as_lat_lng(monkeypatch):
+    coords = [[77.59, 12.97], [77.6, 12.95]]  # OSRM sends [lng, lat]
+    fake_osrm(monkeypatch, data={"code": "Ok", "routes": [{"geometry": {"coordinates": coords}}]})
+
+    path = asyncio.run(osrm_client.get_route_geometry(LOCATIONS))
+
+    assert path == [[12.97, 77.59], [12.95, 77.6]]
