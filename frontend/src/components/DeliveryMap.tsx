@@ -7,6 +7,7 @@ interface Props {
   warehouse: Location;
   deliveries: Location[];
   route: OptimizedStop[] | null;
+  path: [number, number][] | null;
   onMapClick: (lat: number, lng: number) => void;
   onMarkerMove: (id: string, lat: number, lng: number) => void;
 }
@@ -40,7 +41,7 @@ function FitToRoute({ route }: { route: OptimizedStop[] | null }) {
   return null;
 }
 
-export default function DeliveryMap({ warehouse, deliveries, route, onMapClick, onMarkerMove }: Props) {
+export default function DeliveryMap({ warehouse, deliveries, route, path, onMapClick, onMarkerMove }: Props) {
   const sequenceById = new Map(route?.map((s) => [s.id, s.sequence]) ?? []);
 
   const dragEnd = (id: string) => ({
@@ -61,11 +62,12 @@ export default function DeliveryMap({ warehouse, deliveries, route, onMapClick, 
         <ClickHandler onClick={onMapClick} />
         <FitToRoute route={route} />
 
-        {route && (
-          <Polyline
-            positions={route.map((s) => [s.latitude, s.longitude] as L.LatLngTuple)}
-            pathOptions={{ color: "#0e5a4a", weight: 3, opacity: 0.85, dashArray: "7 7" }}
-          />
+        {path && (
+          <>
+            {/* white casing under the line keeps it readable on busy streets */}
+            <Polyline positions={path} pathOptions={{ color: "#fff", weight: 8, opacity: 0.9 }} />
+            <Polyline positions={path} pathOptions={{ color: "#0e5a4a", weight: 4, opacity: 1 }} />
+          </>
         )}
 
         <Marker
@@ -90,9 +92,7 @@ export default function DeliveryMap({ warehouse, deliveries, route, onMapClick, 
       </MapContainer>
 
       <p className="map-hint">
-        {route
-          ? "Straight lines between stops. The API returns order and time, not road geometry."
-          : "Click the map to add a stop. Drag any pin to move it."}
+        {route ? "Route follows the road network." : "Click the map to add a stop. Drag any pin to move it."}
       </p>
     </div>
   );

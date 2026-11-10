@@ -148,6 +148,7 @@ export default function App() {
           warehouse={warehouse}
           deliveries={deliveries}
           route={result?.optimized_route ?? null}
+          path={result?.route_geometry ?? null}
           onMapClick={addStop}
           onMarkerMove={moveStop}
         />

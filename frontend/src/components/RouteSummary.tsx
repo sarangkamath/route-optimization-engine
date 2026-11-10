@@ -42,7 +42,7 @@ export default function RouteSummary({ result, loading, error, deliveryCount, on
 
           <details className="raw">
             <summary>Raw response</summary>
-            <pre>{JSON.stringify(result, null, 2)}</pre>
+            <pre>{JSON.stringify({ ...result, route_geometry: `[${result.route_geometry.length} points]` }, null, 2)}</pre>
           </details>
         </>
       )}

@@ -24,6 +24,7 @@ export interface RouteResponse {
   total_travel_time_minutes: number;
   route_indices: number[];
   optimized_route: OptimizedStop[];
+  route_geometry: [number, number][]; // [lat, lng] points along the roads
 }
 
 // In dev this hits the Vite proxy (see vite.config.ts). Set VITE_API_URL for a deployed backend.
