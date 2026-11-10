@@ -1,7 +1,7 @@
 import asyncio
 
 from schemas import RouteRequest
-from services.osrm_client import get_travel_time_matrix
+from services.osrm_client import get_travel_time_matrix, get_route_geometry
 from optimizer.solver import optimize_route
 
 
@@ -13,6 +13,9 @@ async def get_optimized_route(request: RouteRequest) -> dict:
     route_indices, total_seconds = await asyncio.to_thread(
         optimize_route,
         travel_time_matrix)
+
+    # draw the optimized order along real roads
+    route_geometry = await get_route_geometry([locations[node] for node in route_indices])
 
     optimized_stops = [
         {
@@ -36,5 +39,6 @@ async def get_optimized_route(request: RouteRequest) -> dict:
             total_seconds / 60, 2
         ),
         "route_indices": route_indices,
-        "optimized_route": optimized_stops
+        "optimized_route": optimized_stops,
+        "route_geometry": route_geometry
     }

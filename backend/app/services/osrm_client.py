@@ -60,3 +60,31 @@ async def get_travel_time_matrix(locations: list[Location]) -> list[list[int]]:
         matrix.append(converted_row)
 
     return matrix
+
+
+async def get_route_geometry(locations: list[Location]) -> list[list[float]]:
+    """Road-following path through the locations, in the order given, as [lat, lng] points."""
+    coordinates = ";".join(
+        f"{loc.longitude},{loc.latitude}" for loc in locations
+    )
+
+    url = f"{os.getenv('OSRM_BASE_URL')}/route/v1/driving/{coordinates}"
+
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.get(url, params={"overview": "full", "geometries": "geojson"})
+            response.raise_for_status()
+            data = response.json()
+
+    except httpx.TimeoutException as exception:
+        raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail="OSRM request timed out") from exception
+
+    except httpx.HTTPError as exception:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Unable to connect to OSRM") from exception
+
+    if data.get("code") != "Ok":
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                            detail=f"OSRM could not compute the route: {data.get('code', 'Unknown error')}")
+
+    # OSRM returns (long, lat), Leaflet wants (lat, long)
+    return [[lat, long] for long, lat in data["routes"][0]["geometry"]["coordinates"]]
