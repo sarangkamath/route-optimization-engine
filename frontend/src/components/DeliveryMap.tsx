@@ -8,6 +8,7 @@ interface Props {
   deliveries: Location[];
   route: OptimizedStop[] | null;
   path: [number, number][] | null;
+  focus: L.LatLngTuple | null;
   onMapClick: (lat: number, lng: number) => void;
   onMarkerMove: (id: string, lat: number, lng: number) => void;
 }
@@ -41,7 +42,16 @@ function FitToRoute({ route }: { route: OptimizedStop[] | null }) {
   return null;
 }
 
-export default function DeliveryMap({ warehouse, deliveries, route, path, onMapClick, onMarkerMove }: Props) {
+// Centre on a searched place, zoomed in far enough to fine-tune the pin by a block or so.
+function FlyTo({ target }: { target: L.LatLngTuple | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (target) map.flyTo(target, Math.max(map.getZoom(), 16));
+  }, [target, map]);
+  return null;
+}
+
+export default function DeliveryMap({ warehouse, deliveries, route, path, focus, onMapClick, onMarkerMove }: Props) {
   const sequenceById = new Map(route?.map((s) => [s.id, s.sequence]) ?? []);
 
   const dragEnd = (id: string) => ({
@@ -61,6 +71,7 @@ export default function DeliveryMap({ warehouse, deliveries, route, path, onMapC
         />
         <ClickHandler onClick={onMapClick} />
         <FitToRoute route={route} />
+        <FlyTo target={focus} />
 
         {path && (
           <>
@@ -92,7 +103,7 @@ export default function DeliveryMap({ warehouse, deliveries, route, path, onMapC
       </MapContainer>
 
       <p className="map-hint">
-        {route ? "Route follows the road network." : "Click the map to add a stop. Drag any pin to move it."}
+        {route ? "Route follows the road network." : "Click the map or search to add a stop. Drag any pin to move it."}
       </p>
     </div>
   );

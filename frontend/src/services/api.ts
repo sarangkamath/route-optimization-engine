@@ -69,3 +69,36 @@ export async function checkHealth(): Promise<boolean> {
     return false;
   }
 }
+
+export interface PlaceResult {
+  label: string; // short name used for the stop
+  detail: string; // rest of the address, shown under the label in results
+  latitude: number;
+  longitude: number;
+}
+
+// OpenStreetMap's public geocoder. Fine for a test app (max ~1 request/second, no search-as-you-type);
+// use your own Nominatim or a hosted geocoder if this ever sees real traffic.
+export async function searchPlaces(query: string): Promise<PlaceResult[]> {
+  const params = new URLSearchParams({ q: query, format: "jsonv2", limit: "5" });
+  let res: Response;
+  try {
+    res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
+  } catch {
+    throw new Error("Search is unavailable. Check your connection.");
+  }
+  if (!res.ok) throw new Error(`Search failed (${res.status})`);
+
+  const rows: { name: string; display_name: string; lat: string; lon: string }[] = await res.json();
+  return rows.map((r) => {
+    const parts = r.display_name.split(", ");
+    // Named places start with their name; plain addresses start with a house number, so keep two parts.
+    const used = r.name ? 1 : 2;
+    return {
+      label: r.name || parts.slice(0, used).join(" "),
+      detail: parts.slice(used).join(", "),
+      latitude: parseFloat(r.lat),
+      longitude: parseFloat(r.lon),
+    };
+  });
+}

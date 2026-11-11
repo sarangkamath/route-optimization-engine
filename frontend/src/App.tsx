@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import DeliveryMap from "./components/DeliveryMap";
 import StopList from "./components/StopList";
 import RouteSummary from "./components/RouteSummary";
+import SearchBox from "./components/SearchBox";
 import { checkHealth, optimizeRoute } from "./services/api";
-import type { Location, RouteResponse } from "./services/api";
+import type { Location, PlaceResult, RouteResponse } from "./services/api";
 
 const MAX_DELIVERIES = 10; // matches max_length in RouteRequest
 
@@ -31,6 +32,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [apiOnline, setApiOnline] = useState<boolean | null>(null);
+  const [focus, setFocus] = useState<[number, number] | null>(null);
   const nextId = useRef(1);
 
   useEffect(() => {
@@ -48,12 +50,17 @@ export default function App() {
     setError(null);
   }
 
-  function addStop(lat: number, lng: number) {
+  function addStop(lat: number, lng: number, name?: string) {
     if (deliveries.length >= MAX_DELIVERIES) return;
     edit(() => {
       const n = nextId.current++;
-      setDeliveries((prev) => [...prev, { id: `d${n}`, name: `Stop ${n}`, latitude: lat, longitude: lng }]);
+      setDeliveries((prev) => [...prev, { id: `d${n}`, name: name ?? `Stop ${n}`, latitude: lat, longitude: lng }]);
     });
+  }
+
+  function addSearchedStop(place: PlaceResult) {
+    addStop(place.latitude, place.longitude, place.label);
+    setFocus([place.latitude, place.longitude]);
   }
 
   function moveStop(id: string, lat: number, lng: number) {
@@ -122,6 +129,8 @@ export default function App() {
           </span>
         </header>
 
+        <SearchBox disabled={loading} full={deliveries.length >= MAX_DELIVERIES} onPick={addSearchedStop} />
+
         <StopList
           warehouse={warehouse}
           deliveries={deliveries}
@@ -149,6 +158,7 @@ export default function App() {
           deliveries={deliveries}
           route={result?.optimized_route ?? null}
           path={result?.route_geometry ?? null}
+          focus={focus}
           onMapClick={addStop}
           onMarkerMove={moveStop}
         />
