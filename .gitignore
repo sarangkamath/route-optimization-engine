@@ -9,3 +9,6 @@ __pycache__/
 # Node
 node_modules/
 dist/
+
+# pytest
+.pytest_cache
